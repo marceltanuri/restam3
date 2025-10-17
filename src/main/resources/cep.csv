@@ -1,0 +1,4 @@
+cep;logradouro;complemento;unidade;bairro;localidade;uf;estado;regiao;ibge;gia;ddd;siafi;geolocalizacao_lat;geolocalizacao_lng
+"09732-530";"Rua Mário Fongaro";"(Vl Marlene)";"";"Anchieta";"São Bernardo do Campo";"SP";"São Paulo";"Sudeste";"3548708";"6350";"11";"7075";"";""
+"01001-000";"Praça da Sé";"lado ímpar";"";"Sé";"São Paulo";"SP";"São Paulo";"Sudeste";"3550308";"1004";"11";"7107";"-23.550520";"-46.633309"
+"12210-131";"Rua Siqueira Campos";"";"";"Centro";"São José dos Campos";"SP";"São Paulo";"Sudeste";"3549904";"6455";"12";"7097";"-23.1802";"-45.882"
