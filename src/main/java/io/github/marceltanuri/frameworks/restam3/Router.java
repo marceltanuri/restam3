@@ -71,6 +71,9 @@ public class Router {
                 case POST:
                     response = controller.get().handlePost(httpRequest);
                     break;
+                case PATCH:
+                    response = controller.get().handlePatch(httpRequest);
+                    break;
                 case PUT:
                     response = controller.get().handlePut(httpRequest);
                     break;

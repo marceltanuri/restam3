@@ -51,6 +51,17 @@ public abstract class RestController {
         return new HttpResponse(HttpStatus.NOT_IMPLEMENTED);
     }
 
+
+    /**
+     * Handles PATCH requests.
+     *
+     * @param request the HTTP request
+     * @return the HTTP response
+     */
+    public HttpResponse handlePatch(HttpRequest request) {
+        return new HttpResponse(HttpStatus.NOT_IMPLEMENTED);
+    }
+
     /**
      * Handles PUT requests.
      *

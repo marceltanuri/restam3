@@ -24,11 +24,11 @@ Para usar o `restam3` em seu projeto, adicione a seguinte dependência ao seu ar
     <dependency>
         <groupId>io.github.marceltanuri.frameworks</groupId>
         <artifactId>restam3</artifactId>
-        <version>1.0.2</version> </dependency>
+        <version>1.0.3</version> </dependency>
 </dependencies>
 ```
 
-Nota: O framework restam3 (versão 1.0.2) já inclui as dependências transicionais para Jackson Databind (2.13.0) para JSON e SLF4J (2.0.12) para logging. Você não precisa adicioná-las separadamente, a menos que deseje gerenciar explicitamente suas versões ou configurações.
+Nota: O framework restam3 (versão 1.0.3) já inclui as dependências transicionais para Jackson Databind (2.13.0) para JSON e SLF4J (2.0.12) para logging. Você não precisa adicioná-las separadamente, a menos que deseje gerenciar explicitamente suas versões ou configurações.
 
 
 Pré-requisitos
