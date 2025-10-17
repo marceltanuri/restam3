@@ -11,7 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A simple HTTP server.
+ * A simple, lightweight HTTP server designed for RESTful APIs.
+ * It uses Java's Virtual Threads (available in JDK 21+) to efficiently handle
+ * concurrent client connections with minimal resource overhead.
  *
  * @author Marcel Tanuri
  */
@@ -21,19 +23,32 @@ public class HttpServer {
 
     private final Router router;
 
-    /**
-     * Creates a new HttpServer.
-     *
-     * @param router the router to use for handling requests
-     */
-    public HttpServer(Router router) {
+    // Private constructor to enforce the use of the static factory method 'create()'.
+    private HttpServer(Router router) {
         this.router = router;
     }
 
     /**
-     * Starts the HTTP server on the specified port.
+     * Factory method to create a new HttpServer instance.
+     * <p>
+     * This static method should be used to initiate the Fluent Interface pattern,
+     * allowing the chaining of the {@code .start(port)} call.
      *
-     * @param port the port to listen on
+     * @param router The configured {@link Router} to use for mapping and dispatching requests.
+     * @return A new, configured {@link HttpServer} instance.
+     */
+    public static HttpServer create(Router router) {
+        return new HttpServer(router);
+    }
+
+
+    /**
+     * Starts the HTTP server on the specified port.
+     * <p>
+     * The server uses a Virtual Thread executor to handle each incoming connection,
+     * ensuring high concurrency and low thread overhead.
+     *
+     * @param port The port number for the server to listen on.
      */
     public void start(int port) {
         Banner.print();
@@ -44,7 +59,7 @@ public class HttpServer {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 LOGGER.debug("New client connected");
-                executor.submit(() -> handleClient(clientSocket));
+                executor.submit(() -> _handleClient(clientSocket));
             }
         } catch (IOException e) {
             LOGGER.error("Error starting server", e);
@@ -52,11 +67,13 @@ public class HttpServer {
     }
 
     /**
-     * Handles a client connection.
+     * Reads the client's request, delegates it to the router, and sends the resulting response.
+     * <p>
+     * This method is executed by a dedicated Virtual Thread for each client connection.
      *
-     * @param clientSocket the client socket
+     * @param clientSocket The client socket connection.
      */
-    private void handleClient(Socket clientSocket) {
+    private void _handleClient(Socket clientSocket) {
         try (clientSocket) {
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             router.handleRequest(clientSocket, in);

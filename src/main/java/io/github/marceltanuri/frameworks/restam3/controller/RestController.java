@@ -92,7 +92,6 @@ public abstract class RestController {
         try {
             return Optional.of(jsonParser.toJson(object)); 
         } catch (Exception e) {
-            // Logging translated to English
             LOGGER.error("Error converting object to JSON", e);
             return Optional.empty();
         }

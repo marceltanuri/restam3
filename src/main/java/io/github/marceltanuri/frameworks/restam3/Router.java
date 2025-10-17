@@ -12,12 +12,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.List;
 
 import io.github.marceltanuri.frameworks.restam3.http.HttpStatus;
 
 
 /**
- * A simple router for handling HTTP requests.
+ * A simple router responsible for mapping HTTP request paths to the appropriate {@link RestController}
+ * and dispatching the request for processing. It uses a Fluent Interface design for configuration.
  *
  * @author Marcel Tanuri
  */
@@ -25,28 +27,57 @@ public class Router {
 
     private final Map<String, RestController> routes = new HashMap<>();
 
-    /**
-     * Creates a new Router.
-     */
-    public Router() {
+    // Private constructor to enforce the use of the static factory method 'create()'.
+    private Router() {
     }
 
     /**
-     * Adds a route to the router.
+     * Creates a new instance of the Router.
+     * <p>
+     * This static factory method should be used to initiate the method chaining
+     * (Fluent Interface) for route configuration.
      *
-     * @param path       the path of the route
-     * @param controller the controller that handles the route
+     * @return A new Router instance.
      */
-    public void addRoute(String path, RestController controller) {
+    public static Router create() {
+        return new Router();
+    }
+
+    /**
+     * Adds a single route, mapping a specific path to a controller.
+     * <p>
+     * This method returns the Router instance itself to support method chaining (Fluent Interface).
+     *
+     * @param path The route path (e.g., "/api/users").
+     * @param controller The controller that will handle requests for this path.
+     * @return The current Router instance, allowing further method calls.
+     */
+    public Router addRoute(String path, RestController controller) {
         routes.put(path, controller);
+        return this;
     }
 
     /**
-     * Handles an incoming HTTP request.
+     * Adds multiple routes, mapping a list of paths to the same controller instance.
+     * <p>
+     * This method returns the Router instance itself to support method chaining (Fluent Interface).
      *
-     * @param clientSocket the client socket
-     * @param in           the input reader
-     * @throws IOException if an I/O error occurs
+     * @param paths The list of paths to be mapped (e.g., Arrays.asList("/v1/data", "/v2/data")).
+     * @param controller The controller that will handle requests for all these paths.
+     * @return The current Router instance, allowing further method calls.
+     */
+    public Router addRoute(List<String> paths, RestController controller){
+        paths.forEach(path -> addRoute(path, controller));
+        return this;
+    }
+
+    /**
+     * Handles an incoming HTTP request by parsing the request, finding the appropriate
+     * controller based on the path, and dispatching the call to the corresponding HTTP method handler.
+     *
+     * @param clientSocket The client socket used to send the final response.
+     * @param in The input reader (BufferedReader) containing the raw HTTP request data.
+     * @throws IOException If an I/O error occurs while reading the request or sending the response.
      */
     public void handleRequest(Socket clientSocket, BufferedReader in) throws IOException {
         try {
@@ -59,48 +90,36 @@ public class Router {
                 .map(routes::get);
 
             if (controller.isEmpty()) {
-                sendResponse(clientSocket, new HttpResponse("{\"error\": \"Not Found\"}", HttpStatus.NOT_FOUND));
+                _sendResponse(clientSocket, new HttpResponse("{\"error\": \"Not Found\"}", HttpStatus.NOT_FOUND));
                 return;
             }
+            
+            HttpResponse response = switch (httpRequest.getMethod()) {
+                case GET    -> controller.get().handleGet(httpRequest);
+                case POST   -> controller.get().handlePost(httpRequest);
+                case PATCH  -> controller.get().handlePatch(httpRequest);
+                case PUT    -> controller.get().handlePut(httpRequest);
+                case DELETE -> controller.get().handleDelete(httpRequest);
+                default     -> new HttpResponse(HttpStatus.NOT_IMPLEMENTED);
+            };
 
-            HttpResponse response;
-            switch (httpRequest.getMethod()) {
-                case GET:
-                    response = controller.get().handleGet(httpRequest);
-                    break;
-                case POST:
-                    response = controller.get().handlePost(httpRequest);
-                    break;
-                case PATCH:
-                    response = controller.get().handlePatch(httpRequest);
-                    break;
-                case PUT:
-                    response = controller.get().handlePut(httpRequest);
-                    break;
-                case DELETE:
-                    response = controller.get().handleDelete(httpRequest);
-                    break;
-                default:
-                    response = new HttpResponse(HttpStatus.NOT_IMPLEMENTED);
-                    break;
-            }
-
-            sendResponse(clientSocket, response);
+            _sendResponse(clientSocket, response);
 
         } catch (IOException | IllegalArgumentException e) {
-            sendResponse(clientSocket, new HttpResponse("{\"error\": \"" + e.getMessage() + "\"}", HttpStatus.BAD_REQUEST));
+            _sendResponse(clientSocket, new HttpResponse("{\"error\": \"" + e.getMessage() + "\"}", HttpStatus.BAD_REQUEST));
         }
     }
 
     /**
-     * Sends an HTTP response to the client.
+     * Sends the complete HTTP response back to the client socket.
      *
-     * @param clientSocket the client socket
-     * @param response     the HTTP response
-     * @throws IOException if an I/O error occurs
+     * @param clientSocket The client socket.
+     * @param response The {@link HttpResponse} object to be serialized and sent.
+     * @throws IOException If an I/O error occurs during transmission.
      */
-    private void sendResponse(Socket clientSocket, HttpResponse response) throws IOException {
+    private void _sendResponse(Socket clientSocket, HttpResponse response) throws IOException {
         OutputStream out = clientSocket.getOutputStream();
+        // Constructs the HTTP response string (Status Line, Headers, Body)
         String httpResponse = "HTTP/1.1 " + response.getStatus().getCode() + " " + response.getStatus().getMessage() + "\r\n" +
                 "Content-Type: application/json\r\n" +
                 "Content-Length: " + response.getBody().getBytes(StandardCharsets.UTF_8).length + "\r\n" +

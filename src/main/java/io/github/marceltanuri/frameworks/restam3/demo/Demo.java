@@ -10,6 +10,9 @@ import io.github.marceltanuri.frameworks.restam3.json.JsonParser;
 import io.github.marceltanuri.frameworks.restam3.json.ConfigurableJacksonParser;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+import java.util.Arrays;
+
+
 /**
  * A demo application to show how to use the framework.
  *
@@ -30,10 +33,15 @@ public class Demo {
             mapper.enable(SerializationFeature.INDENT_OUTPUT);
         });
 
-        Router router = new Router();
-        router.addRoute("/cep", new CepRestController(new CepRepository(), jsonParser));
-
-        HttpServer server = new HttpServer(router);
-        server.start(8080);
+        HttpServer.create(
+            Router.create()
+            .addRoute(
+                Arrays.asList("/cep", "address"), 
+                new CepRestController(new CepRepository(), jsonParser))
+            .addRoute(
+                "/test", 
+                new CepRestController(new CepRepository(), jsonParser))
+        )
+        .start(8080);
     }
 }
